@@ -1,0 +1,16 @@
+{
+  "name": "recipe-app",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/web",
+    "services/recipe-service",
+    "services/review-service"
+  ],
+  "scripts": {
+    "start:web": "npm --workspace apps/web start",
+    "start:recipe": "npm --workspace services/recipe-service start",
+    "start:review": "npm --workspace services/review-service start",
+    "check": "node --check apps/web/src/server.js && node --check services/recipe-service/src/server.js && node --check services/review-service/src/server.js"
+  }
+}
