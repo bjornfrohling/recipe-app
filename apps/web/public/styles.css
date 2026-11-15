@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f7f2eb;
+  color: #222;
+}
+
+header {
+  background: #2d7d4f;
+  color: #fff;
+  padding: 1.5rem;
+}
+
+main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+textarea {
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: #2f6fed;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2358bf;
+}
+
+.recipe-list,
+#reviews {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.recipe-card,
+.review-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fafafa;
+}
+
+.muted {
+  color: #666;
+}
+
+.hidden {
+  display: none;
+}
+
+#status {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  min-width: 220px;
+  max-width: 360px;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+}
+
+#status.success {
+  background: #daf5dc;
+  color: #1d5b27;
+}
+
+#status.error {
+  background: #ffdcdc;
+  color: #8f1d1d;
+}
+
