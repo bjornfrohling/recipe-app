@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: review-service
+  namespace: recipe-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: review-service
+  template:
+    metadata:
+      labels:
+        app: review-service
+    spec:
+      containers:
+        - name: review-service
+          image: bjornthedocker/recipe-app-reviews:v1
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: "3002"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: recipe-app-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: recipe-app-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: recipe-app-config
+                  key: DB_NAME
+            - name: RECIPE_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: recipe-app-config
+                  key: RECIPE_SERVICE_URL
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: review-service
+  namespace: recipe-app
+spec:
+  selector:
+    app: review-service
+  ports:
+    - port: 3002
+      targetPort: 3002

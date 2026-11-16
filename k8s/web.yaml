@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: recipe-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: bjornthedocker/recipe-app-web:v1
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: RECIPE_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: recipe-app-config
+                  key: RECIPE_SERVICE_URL
+            - name: REVIEW_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: recipe-app-config
+                  key: REVIEW_SERVICE_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: recipe-app
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30081
