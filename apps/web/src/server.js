@@ -15,12 +15,14 @@ function sendJson(res, status, payload) {
   res.status(status).json(payload);
 }
 
+// Forward rejected async handlers to Express's error middleware
 function wrap(handler) {
   return (req, res, next) => {
     Promise.resolve(handler(req, res, next)).catch(next);
   };
 }
 
+// Preserve the backend status and JSON body when proxying API requests
 async function forwardJson({ url, method = "GET", body }) {
   const response = await fetch(url, {
     method,
@@ -35,6 +37,7 @@ async function forwardJson({ url, method = "GET", body }) {
   return { ok: response.ok, status: response.status, json };
 }
 
+// Report web-service configuration
 app.get("/api/health", wrap(async (_req, res) => {
   sendJson(res, 200, {
     service: "web",
@@ -44,6 +47,7 @@ app.get("/api/health", wrap(async (_req, res) => {
   });
 }));
 
+// Use the web service as entry point to the recipe API
 app.get("/api/recipes", wrap(async (_req, res) => {
   try {
     const result = await forwardJson({ url: `${RECIPE_SERVICE_URL}/recipes` });
@@ -77,6 +81,7 @@ app.get("/api/recipes/:id", wrap(async (req, res) => {
   }
 }));
 
+// Translate nested browser routes into the review service API format
 app.get("/api/recipes/:id/reviews", wrap(async (req, res) => {
   try {
     const result = await forwardJson({

@@ -5,6 +5,7 @@ const PORT = Number(process.env.PORT || 3002);
 const RECIPE_SERVICE_URL =
   process.env.RECIPE_SERVICE_URL || "http://localhost:3001";
 
+// Reuse database connection
 const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT || 5432),
@@ -16,12 +17,14 @@ const pool = new Pool({
 const app = express();
 app.use(express.json());
 
+// Pass rejected async handlers to Express error middleware
 function wrap(handler) {
   return (req, res, next) => {
     Promise.resolve(handler(req, res, next)).catch(next);
   };
 }
 
+// Convert database column names into JSON
 function reviewFromRow(row) {
   return {
     id: row.id,
@@ -33,6 +36,7 @@ function reviewFromRow(row) {
   };
 }
 
+// Validate the normalized payload
 function validateReview(body) {
   if (!body.recipeId || !body.reviewerName || !body.comment) {
     return "recipeId, reviewerName, and comment are required.";
@@ -45,11 +49,14 @@ function validateReview(body) {
   return null;
 }
 
+// 2xx recipe responses are treated as an existing recipe
+// Non-2xx responses return false
 async function recipeExists(recipeId) {
   const response = await fetch(`${RECIPE_SERVICE_URL}/recipes/${recipeId}`);
   return response.ok;
 }
 
+// Check the database connection
 app.get("/health", wrap(async (_req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -62,6 +69,7 @@ app.get("/health", wrap(async (_req, res) => {
 app.get("/reviews", wrap(async (req, res) => {
   const { recipeId } = req.query;
 
+  // Filter by recipe when requested; else return reviews for all recipes.
   if (recipeId) {
     const numericRecipeId = Number(recipeId);
     if (!Number.isInteger(numericRecipeId) || numericRecipeId < 1) {
@@ -79,6 +87,7 @@ app.get("/reviews", wrap(async (req, res) => {
     return res.json({ reviews: rows.map(reviewFromRow) });
   }
 
+  // Pass the ID as a query parameter
   const { rows } = await pool.query(
     `SELECT id, recipe_id, reviewer_name, rating, comment, created_at
      FROM reviews
@@ -88,6 +97,7 @@ app.get("/reviews", wrap(async (req, res) => {
   return res.json({ reviews: rows.map(reviewFromRow) });
 }));
 
+// Normalize input before validating and storing the review
 app.post("/reviews", wrap(async (req, res) => {
   const payload = {
     recipeId: Number(req.body.recipeId),
@@ -101,11 +111,13 @@ app.post("/reviews", wrap(async (req, res) => {
     return res.status(400).json({ error });
   }
 
+  // Validate the recipe exists before writing to the db
   const exists = await recipeExists(payload.recipeId);
   if (!exists) {
     return res.status(400).json({ error: "Recipe does not exist." });
   }
 
+  // RETURNING provides the stored row and its generated ID
   const { rows } = await pool.query(
     `INSERT INTO reviews (recipe_id, reviewer_name, rating, comment)
      VALUES ($1, $2, $3, $4)
@@ -116,6 +128,7 @@ app.post("/reviews", wrap(async (req, res) => {
   return res.status(201).json({ review: reviewFromRow(rows[0]) });
 }));
 
+// Log unexpected errors on the server and return a generic response
 app.use((error, _req, res, _next) => {
   console.error(error);
   res.status(500).json({ error: "Unexpected review-service error." });
